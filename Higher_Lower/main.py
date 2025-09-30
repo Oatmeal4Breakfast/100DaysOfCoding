@@ -6,9 +6,7 @@ from game_data import data
 
 def pick_item(data: list) -> dict:
     """Randomly select an item from the list and remove it as an available option"""
-    item: dict = random.choice(data)
-    data.remove(item)
-    return item
+    return random.choice(data)
 
 
 def print_vs(item_1: dict, item_2: dict) -> None:
@@ -22,57 +20,54 @@ def print_vs(item_1: dict, item_2: dict) -> None:
     )
 
 
-def validate_response(response: str) -> str:
+def get_valid_choice() -> str:
+    guess: str = input("Who do you think has more followers? Type 'A' or 'B': ").upper()
     valid_responses: list = ["A", "B"]
-    guess: str = response
-    while response.upper() not in valid_responses:
-        guess: str = input("Invalid response. Please type 'A' or 'B': ")
+    while guess not in valid_responses:
+        guess: str = input("Invalid response. Please type 'A' or 'B': ").upper()
     return guess
 
 
 def compare_followers(user_choice: dict, other_choice: dict) -> bool:
     """Compare the follower counts of the two items"""
-    if user_choice["follower_count"] > other_choice["follower_count"]:
-        return True
-    else:
-        return False
+    return user_choice["follower_count"] > other_choice["follower_count"]
 
 
 def main():
     # print the logo
     print(logo)
-
     player_score: int = 0
-    # Initiate the choice
-    user_choice: dict = {}
-    other_choice: dict = {}
+
+    # make copy of the data to manipulate
+    available_data: list = data.copy()
 
     # Randomly pick an account from the list of accounts
-    item_1: dict = pick_item(data=data)
-    item_2: dict = pick_item(data=data)
+    item_2: dict = pick_item(data=available_data)
+    available_data.remove(item_2)
 
-    print_vs(item_1=item_1, item_2=item_2)
+    while True:
+        item_1: dict = item_2
+        item_2: dict = pick_item(data=available_data)
+        available_data.remove(item_2)
 
-    # Asking the user to take a guess
-    guess: str = input("Who do you think has more followers? Type 'A' or 'B': ")
-    validate_response(response=guess)
+        print_vs(item_1=item_1, item_2=item_2)
+        guess: str = get_valid_choice()
 
-    if guess == "A":
-        user_choice = item_1
-        other_choice = item_2
-    elif guess == "B":
-        user_choice = item_2
-        other_choice = item_1
+        user_choice: dict = item_1 if guess == "A" else item_2
+        other_choice: dict = item_2 if user_choice == item_1 else item_1
 
-    print(f"You chose: {user_choice['follower_count']}")
-    print(f"The other choise was: {other_choice['follower_count']}")
-    # Compare the choice
-    if compare_followers(user_choice=user_choice, other_choice=other_choice):
-        print("Correct!")
-        player_score += 1
-        other_choice = pick_item(data=data)
-    else:
-        print(f"Game over. Your score was {player_score}")
+        # Compare the choice
+        if compare_followers(user_choice=user_choice, other_choice=other_choice):
+            print("Correct!")
+            player_score += 1
+            item_2 = user_choice
+        else:
+            print(f"Game over. Your score was {player_score}")
+            break
+
+        if not available_data:
+            print("You've guessed all items correctly! You win!")
+            break
 
 
 if __name__ == "__main__":
